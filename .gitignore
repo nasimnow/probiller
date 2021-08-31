@@ -8,7 +8,7 @@ builds/
 dist/
 node_modules/
 *.compiled.*
-
+buildss/
 # Folder config file #
 ######################
 Desktop.ini
