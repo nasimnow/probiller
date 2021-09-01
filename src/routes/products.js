@@ -34,7 +34,6 @@ import {
 } from "@chakra-ui/react";
 
 import { UilTrashAlt, UilEdit } from "@iconscout/react-unicons";
-import supabase from "../components/supabase";
 import ProductAdd from "./product_add";
 
 // Note: `user` comes from the URL, courtesy of our router
@@ -51,7 +50,7 @@ const Products = () => {
   } = useDisclosure();
 
   const getProducts = async () => {
-    const response = await sendAsync("SELECT * FROM products");
+    const response = await sendAsync("SELECT * FROM products ORDER BY id DESC");
     setProducts(response);
     setIsLoading(false);
   };

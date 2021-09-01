@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import "@babel/polyfill";
 import {
   Stack,
@@ -36,7 +36,7 @@ const Bill = () => {
   const [selectedQty, setSelectedQty] = useState(1);
   const [customerName, setCustomerName] = useState("");
   const [customerMobile, setCustomerMobile] = useState("");
-
+  const addProductRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState();
   const [billProducts, setBillProducts] = useState([]);
@@ -56,7 +56,6 @@ const Bill = () => {
 
   const addOrder = async () => {
     setIsLoading(true);
-
     const resp = await sendAsync(
       `INSERT INTO orders (date,products,total_amount,payment,name,mobile)VALUES('${new Date().toLocaleString()}','${JSON.stringify(
         billProducts
@@ -67,7 +66,21 @@ const Bill = () => {
     );
     // history.push("/orders");
     setIsLoading(false);
+    history.push("/orders");
   };
+
+  window.addEventListener("keydown", (evt) => {
+    evt = evt || window.event;
+    var target = evt.target || evt.srcElement;
+    if (!/INPUT|TEXTAREA|SELECT|BUTTON/.test(target.nodeName)) {
+      if (evt.keyCode === 13) {
+        console.log("ente");
+        if (billProducts.length > 0) addOrder();
+      } else {
+        return;
+      }
+    }
+  });
 
   return (
     <Stack backgroundColor="#eef2f9" ml="250px" h="100vh">
@@ -104,7 +117,10 @@ const Bill = () => {
         <Box w="40%">
           <AsyncSelect
             loadOptions={searchProducts}
-            onChange={(input) => setSelectedProduct({ ...input })}
+            onChange={(input) => {
+              setSelectedProduct({ ...input });
+              setTimeout(() => addProductRef.current.focus(), 100);
+            }}
             value={selectedProduct}
           />
         </Box>
@@ -137,6 +153,7 @@ const Bill = () => {
         )}
 
         <Button
+          ref={addProductRef}
           w="130px"
           mt="30px"
           isDisabled={!selectedProduct && selectedQty}

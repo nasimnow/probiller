@@ -9,8 +9,9 @@ import {
   useDisclosure,
   Button,
   Tooltip,
+  FormControl,
+  FormLabel,
 } from "@chakra-ui/react";
-import Header from "../components/header";
 import {
   Table,
   Thead,
@@ -24,6 +25,9 @@ import {
   SkeletonCircle,
 } from "@chakra-ui/react";
 
+import html2canvas from "html2canvas";
+import printJS from "print-js";
+
 import {
   Modal,
   ModalOverlay,
@@ -35,14 +39,9 @@ import {
 } from "@chakra-ui/react";
 
 import BillPrint from "../components/billPrint";
-import { saveAs } from "file-saver";
-import html2canvas from "html2canvas";
 import { UilTrashAlt, UilReceiptAlt, UilPrint } from "@iconscout/react-unicons";
-import supabase from "../components/supabase";
-import ProductAdd from "./product_add";
 import { useHistory } from "react-router-dom";
 import sendAsync from "../message-control/renderrer";
-import printJS from "print-js";
 
 // Note: `user` comes from the URL, courtesy of our router
 const Orders = () => {
@@ -50,13 +49,14 @@ const Orders = () => {
   const [selectedOrder, setSelectedOrder] = useState();
   const [orders, setOrders] = useState([]);
   const [recieptOpen, setRecieptOpen] = useState(false);
+  const [modalType, setModalType] = useState("");
   const [paid, setPaid] = useState("");
   const { isOpen, onOpen, onClose } = useDisclosure();
   const history = useHistory();
 
   useEffect(() => {
     const getOrders = async () => {
-      const response = await sendAsync("SELECT * FROM orders");
+      const response = await sendAsync("SELECT * FROM orders ORDER BY id DESC");
       setOrders(response);
       setIsLoading(false);
     };
@@ -64,7 +64,14 @@ const Orders = () => {
   }, []);
 
   const printReciept = (orderDetails) => {
+    setPaid("");
+    setModalType("paid");
+    onOpen();
     setSelectedOrder(orderDetails);
+  };
+
+  const printProceed = () => {
+    onClose();
     setRecieptOpen(true);
     setTimeout(async () => {
       const node = document.getElementById("order_reciept");
@@ -85,7 +92,6 @@ const Orders = () => {
       });
       setRecieptOpen(false);
     }, 100);
-    //ipcRenderer.send("print");
   };
 
   const deleteOrder = async (id) => {
@@ -97,6 +103,7 @@ const Orders = () => {
 
   const downloadReciept = (orderDetails) => {
     setSelectedOrder(orderDetails);
+    setModalType("reciept");
     onOpen();
   };
 
@@ -108,7 +115,35 @@ const Orders = () => {
           <ModalHeader>Order#:{selectedOrder?.id}</ModalHeader>
           <ModalCloseButton />
           <ModalBody display="grid" placeItems="center" mb="10px">
-            <BillPrint data={selectedOrder} />
+            {modalType == "reciept" ? (
+              <BillPrint data={selectedOrder} />
+            ) : (
+              <Stack w="100%">
+                <FormControl w="80%">
+                  <FormLabel>Paid</FormLabel>
+                  <Input
+                    autoFocus
+                    w="100%"
+                    type="number"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") paid && printProceed();
+                    }}
+                    onChange={(e) => setPaid(e.target.value)}
+                    value={paid}
+                  />
+                </FormControl>
+                <Button
+                  bgColor="#00d67e"
+                  color="white"
+                  w="130px"
+                  mt="30px"
+                  isDisabled={!paid}
+                  onClick={printProceed}
+                >
+                  Proceed
+                </Button>
+              </Stack>
+            )}
           </ModalBody>
         </ModalContent>
       </Modal>
@@ -143,7 +178,7 @@ const Orders = () => {
               <Th>Mobile</Th>
               <Th isNumeric>Total Amount</Th>
               <Th>Payment</Th>
-              <Th>Paid</Th>
+              {/* <Th>Paid</Th> */}
               <Th>Actions</Th>
             </Tr>
           </Thead>
@@ -193,17 +228,10 @@ const Orders = () => {
                     </Badge>
                   )}
                 </Td>
-                <Td>
-                  <Input
-                    w="70px"
-                    onChange={(e) => setPaid(e.target.value)}
-                    value={paid}
-                  />
-                </Td>
+
                 <Td>
                   <IconButton
                     p="2px"
-                    isDisabled={!paid}
                     onClick={() => printReciept({ ...item, paid })}
                     borderRadius="full"
                     icon={<UilPrint size="20px" color="orange" />}

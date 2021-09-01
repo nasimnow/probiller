@@ -28,8 +28,6 @@
     "@emotion/react": "^11.4.0",
     "@emotion/styled": "^11.3.0",
     "@iconscout/react-unicons": "^1.1.6",
-    "@iconscout/react-unicons-solid": "0.0.3",
-    "@supabase/supabase-js": "^1.17.0",
     "file-saver": "^2.0.5",
     "framer-motion": "^4.1.17",
     "html2canvas": "^1.0.0-rc.7",

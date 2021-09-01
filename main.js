@@ -38,12 +38,15 @@ function createWindow() {
     width: 1024,
     height: 768,
     show: false,
+    //fullscreen: true,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
     },
     icon: __dirname + "/public/logo.png",
   });
+  mainWindow.maximize();
+  mainWindow.show();
   mainWindow.setTitle("Pro Biller");
 
   // and load the index.html of the app.

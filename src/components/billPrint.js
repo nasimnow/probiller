@@ -22,8 +22,8 @@ const BillPrint = ({ data }) => (
       Mob: 9562478470
     </Text>
     <Stack direction="column" w="100%" pt="12px">
-      <Text fontSize="12px">{`Name:${data.name}`} </Text>
-      <Text fontSize="12px">{`Mobile:${data.mobile}`} </Text>
+      <Text fontSize="12px">{`Name: ${data.name}`} </Text>
+      <Text fontSize="12px">{`Mobile: ${data.mobile}`} </Text>
     </Stack>
     <Stack direction="row" w="100%" justifyContent="space-between" pt="12px">
       <Text fontSize="12px">{`Bill#:${data.id}`} </Text>
