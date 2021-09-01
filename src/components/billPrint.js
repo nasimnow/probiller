@@ -1,4 +1,7 @@
-import { Stack, Text, Box, Divider, Button } from "@chakra-ui/react";
+import { Stack, Text, Box, Divider, Image } from "@chakra-ui/react";
+import React from "react";
+import logo from "../assets/shop-logo.png";
+
 const BillPrint = ({ data }) => (
   <Stack
     id="order_reciept"
@@ -10,13 +13,18 @@ const BillPrint = ({ data }) => (
     alignItems="center"
     spacing="0"
   >
-    <Text fontWeight="bold">Coffee Hub</Text>
+    {/* <Text fontWeight="bold">SKEWERS</Text> */}
+    <Image src={logo} w="70%" />
     <Text fontSize="12px" textAlign="center" pb="5px" pt="4px">
-      Calicut Road, Vennakad,
+      Narikkuni Road, poonoor,
     </Text>
     <Text fontSize="12px" fontWeight="medium">
-      Mob: 9946218229
+      Mob: 9562478470
     </Text>
+    <Stack direction="column" w="100%" pt="12px">
+      <Text fontSize="12px">{`Name:${data.name}`} </Text>
+      <Text fontSize="12px">{`Mobile:${data.mobile}`} </Text>
+    </Stack>
     <Stack direction="row" w="100%" justifyContent="space-between" pt="12px">
       <Text fontSize="12px">{`Bill#:${data.id}`} </Text>
       <Text fontSize="12px">{`Date: ${new Date(data.date).toLocaleDateString(
@@ -43,6 +51,7 @@ const BillPrint = ({ data }) => (
     <Divider pt="6px" />
     {JSON.parse(data.products).map((item, i) => (
       <Stack
+        key={i}
         pt="10px"
         direction="row"
         fontSize="13px"

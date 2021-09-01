@@ -1,5 +1,6 @@
-import React ,{useEffect,useState} from "react";
+import React, { useEffect, useState } from "react";
 
+import sendAsync from "../message-control/renderrer";
 import {
   Stack,
   Text,
@@ -49,37 +50,25 @@ const Products = () => {
     onClose: onEditClose,
   } = useDisclosure();
 
+  const getProducts = async () => {
+    const response = await sendAsync("SELECT * FROM products");
+    setProducts(response);
+    setIsLoading(false);
+  };
+
   useEffect(() => {
-    const getProducts = async () => {
-      setProducts([]);
-      const response = await supabase
-        .from("products")
-        .select("*")
-        .order("id", { ascending: false });
-      setProducts(response.data);
-      setIsLoading(false);
-    };
-    //refresh on data change
-    // supabase
-    //   .from("products")
-    //   .on("INSERT", (payload) => getProducts())
-    //   .subscribe();
-    // supabase
-    //   .from("products")
-    //   .on("UPDATE", (payload) => getProducts())
-    //   .subscribe();
     getProducts();
   }, []);
 
   const deleteProduct = async (productId) => {
-    if (confirm("are you sure")) {
-      await supabase.from("products").delete().eq("id", productId);
+    if (confirm("Are you sure")) {
+      await sendAsync(`DELETE FROM products WHERE id=${productId}`);
       setProducts((old) => old.filter((item) => item.id !== productId));
     }
   };
 
   return (
-    <Stack backgroundColor="#eef2f9" ml="250px" h="100%">
+    <Stack backgroundColor="#eef2f9" ml="250px" h="100vh">
       <Box
         borderRadius="15px"
         m="40px"
@@ -125,7 +114,7 @@ const Products = () => {
               </Tr>
             )}
             {products?.map((item) => (
-              <Tr>
+              <Tr key={item.id}>
                 <Td>{item.id}</Td>
                 <Td>{item.name}</Td>
                 <Td isNumeric fontWeight="bold">
@@ -162,7 +151,12 @@ const Products = () => {
         <ModalContent>
           <ModalHeader>Edit Product</ModalHeader>
           <ModalCloseButton />
-          <ProductAdd type="update" data={itemSelected} />
+          <ProductAdd
+            onClose={onEditClose}
+            getProducts={getProducts}
+            type="update"
+            data={itemSelected}
+          />
         </ModalContent>
       </Modal>
       <Modal
@@ -175,7 +169,12 @@ const Products = () => {
         <ModalContent>
           <ModalHeader>Add Product</ModalHeader>
           <ModalCloseButton />
-          <ProductAdd type="add" data={{ name: "", price: "" }} />
+          <ProductAdd
+            onClose={onClose}
+            type="add"
+            getProducts={getProducts}
+            data={{ name: "", price: "" }}
+          />
         </ModalContent>
       </Modal>
     </Stack>

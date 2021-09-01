@@ -1,5 +1,5 @@
-import React ,{useEffect,useState} from "react";
-
+import React, { useEffect, useState } from "react";
+import sendAsync from "../message-control/renderrer";
 import {
   Stack,
   Text,
@@ -9,25 +9,31 @@ import {
   FormControl,
   FormLabel,
 } from "@chakra-ui/react";
-import supabase from "../components/supabase";
 
-const ProductAdd = ({ type, data }) => {
+const ProductAdd = ({ type, data, getProducts, onClose }) => {
   const [product, setProduct] = useState({ ...data });
   const [isLoading, setIsLoading] = useState(false);
 
   const addProduct = async () => {
     setIsLoading(true);
-    const resp = await supabase.from("products").insert(product);
+    let rsp = await sendAsync(
+      `INSERT INTO products (name, price) VALUES ('${product.name}','${product.price}')`
+    );
+    console.log(rsp);
     setIsLoading(false);
     setProduct({ name: "", price: "" });
+    getProducts();
+    onClose();
   };
 
   const updateProduct = async () => {
     setIsLoading(true);
-    const resp = await supabase
-      .from("products")
-      .update(product)
-      .eq("id", data.id);
+    await sendAsync(
+      `UPDATE products SET name='${product.name}',price='${product.price}' WHERE id=${data.id} `
+    );
+    getProducts();
+    onClose();
+
     setIsLoading(false);
   };
   return (

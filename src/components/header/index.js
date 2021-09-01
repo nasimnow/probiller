@@ -1,6 +1,6 @@
 import { Box, IconButton, Image, Stack, Text } from "@chakra-ui/react";
-import React ,{useEffect,useState} from "react";
-import logo from "../../assets/logo.jpeg";
+import React, { useEffect, useState } from "react";
+import logo from "../../assets/shop-logo.png";
 
 import {
   UilChart,
@@ -8,18 +8,17 @@ import {
   UilReceiptAlt,
   UilArchive,
 } from "@iconscout/react-unicons";
-import "./style.css"
+import "./style.css";
 
 import { Link, Redirect, useHistory, useLocation } from "react-router-dom";
 
-const Header = ( ) => {
-
+const Header = () => {
   const currLocation = useLocation().pathname.split("/")[1];
-  const loc = useLocation()
+  const loc = useLocation();
   const NavItem = ({ tag, path, icon }) => (
     <Link to={`/${path}`}>
       <Stack
-      //onClick={()=>history.push(`/${path}`)}
+        //onClick={()=>history.push(`/${path}`)}
 
         direction="row"
         alignItems="center"
@@ -39,7 +38,7 @@ const Header = ( ) => {
           {tag}
         </Text>
       </Stack>
-      </Link>
+    </Link>
   );
 
   return (
@@ -51,7 +50,7 @@ const Header = ( ) => {
       boxShadow="rgba(149, 157, 165, 0.2) 0px 0px 16px"
     >
       <Stack direction="column" p="20px">
-        <Image p="10px" mb="30px" w="100%" src={logo} borderRadius="30px" />
+        <Image p="10px" mb="30px" w="80%" src={logo} borderRadius="10px" />
 
         <NavItem
           tag="Dashboard"

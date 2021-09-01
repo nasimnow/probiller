@@ -1,5 +1,5 @@
-import React ,{useEffect,useState} from "react";
-import "@babel/polyfill"
+import React, { useEffect, useState } from "react";
+import "@babel/polyfill";
 import {
   Stack,
   Text,
@@ -26,7 +26,7 @@ import {
   IconButton,
   SkeletonCircle,
 } from "@chakra-ui/react";
-import supabase from "../components/supabase";
+import sendAsync from "../message-control/renderrer";
 import BillPrint from "../components/billPrint";
 import AsyncSelect from "react-select/async";
 import { useHistory } from "react-router-dom";
@@ -34,18 +34,19 @@ import { useHistory } from "react-router-dom";
 // Note: `user` comes from the URL, courtesy of our router
 const Bill = () => {
   const [selectedQty, setSelectedQty] = useState(1);
+  const [customerName, setCustomerName] = useState("");
+  const [customerMobile, setCustomerMobile] = useState("");
+
   const [isLoading, setIsLoading] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState();
   const [billProducts, setBillProducts] = useState([]);
   const [payment, setPayment] = useState("CASH");
-  const history = useHistory()
+  const history = useHistory();
 
   const searchProducts = async (searchTerm, callBack) => {
-    const response = await supabase
-      .from("products")
-      .select("*")
-      .ilike(`name`, `%${searchTerm}%`);
-    const filteredResponse = response.data.map((product) => ({
+    const response = await sendAsync(`SELECT * FROM products
+    WHERE name LIKE '%${searchTerm}%'`);
+    const filteredResponse = response.map((product) => ({
       value: product,
       label: product.name,
     }));
@@ -55,22 +56,21 @@ const Bill = () => {
 
   const addOrder = async () => {
     setIsLoading(true);
-    const resp = await supabase.from("orders").insert({
-      date: new Date().toLocaleString(),
-      products: JSON.stringify(billProducts),
-      total_amount: billProducts.reduce(
+
+    const resp = await sendAsync(
+      `INSERT INTO orders (date,products,total_amount,payment,name,mobile)VALUES('${new Date().toLocaleString()}','${JSON.stringify(
+        billProducts
+      )}','${billProducts.reduce(
         (prev, curr) => prev + curr.qty * curr.price,
         0
-      ),
-      payment,
-    });
-    console.log(resp);
+      )}','${payment}','${customerName}','${customerMobile}')`
+    );
     // history.push("/orders");
     setIsLoading(false);
   };
 
   return (
-    <Stack backgroundColor="#eef2f9" ml="250px" h="100%">
+    <Stack backgroundColor="#eef2f9" ml="250px" h="100vh">
       <Stack
         borderRadius="15px"
         m="40px"
@@ -81,6 +81,26 @@ const Bill = () => {
         <Text fontWeight="bold" fontSize="20px" mb="20px">
           Add Order
         </Text>
+        <Stack width="80%" direction="row">
+          <FormControl w="50%">
+            <FormLabel>Name</FormLabel>
+            <Input
+              type="text"
+              value={customerName}
+              onChange={(e) => setCustomerName(e.target.value)}
+              placeholder="name here"
+            />
+          </FormControl>
+          <FormControl w="50%">
+            <FormLabel>Mobile</FormLabel>
+            <Input
+              type="number"
+              value={customerMobile}
+              onChange={(e) => setCustomerMobile(e.target.value)}
+              placeholder="91xxxxxxx"
+            />
+          </FormControl>
+        </Stack>
         <Box w="40%">
           <AsyncSelect
             loadOptions={searchProducts}
@@ -144,7 +164,7 @@ const Bill = () => {
           </Thead>
           <Tbody>
             {billProducts?.map((item, i) => (
-              <Tr>
+              <Tr key={i}>
                 <Td>{i + 1}</Td>
                 <Td>{item.name}</Td>
                 <Td isNumeric>₹{item.price}</Td>
