@@ -10,11 +10,6 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.css$/,
-        use: [MiniCssExtractPlugin.loader, "css-loader", "postcss-loader"],
-        include: defaultInclude,
-      },
-      {
         test: /\.jsx?$/,
         use: [{ loader: "babel-loader" }],
         include: defaultInclude,
@@ -35,7 +30,7 @@ module.exports = {
   },
   target: "electron-renderer",
   plugins: [
-    new HtmlWebpackPlugin(),
+    new HtmlWebpackPlugin({ title: "Pro Biller" }),
     new MiniCssExtractPlugin({
       // Options similar to the same options in webpackOptions.output
       // both options are optional

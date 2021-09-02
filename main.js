@@ -38,6 +38,7 @@ function createWindow() {
     width: 1024,
     height: 768,
     show: false,
+
     //fullscreen: true,
     webPreferences: {
       nodeIntegration: true,

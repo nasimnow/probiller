@@ -4,7 +4,6 @@ import {
   Stack,
   Text,
   Box,
-  Divider,
   Button,
   Input,
   FormLabel,
@@ -18,16 +17,12 @@ import {
   Table,
   Thead,
   Tbody,
-  Tfoot,
   Tr,
   Th,
   Td,
-  TableCaption,
-  IconButton,
-  SkeletonCircle,
 } from "@chakra-ui/react";
 import sendAsync from "../message-control/renderrer";
-import BillPrint from "../components/billPrint";
+
 import AsyncSelect from "react-select/async";
 import { useHistory } from "react-router-dom";
 
@@ -56,8 +51,9 @@ const Bill = () => {
 
   const addOrder = async () => {
     setIsLoading(true);
+
     const resp = await sendAsync(
-      `INSERT INTO orders (date,products,total_amount,payment,name,mobile)VALUES('${new Date().toLocaleString()}','${JSON.stringify(
+      `INSERT INTO orders (date,products,total_amount,payment,name,mobile)VALUES(datetime('now', 'localtime'),'${JSON.stringify(
         billProducts
       )}','${billProducts.reduce(
         (prev, curr) => prev + curr.qty * curr.price,
@@ -69,18 +65,18 @@ const Bill = () => {
     history.push("/orders");
   };
 
-  window.addEventListener("keydown", (evt) => {
-    evt = evt || window.event;
-    var target = evt.target || evt.srcElement;
-    if (!/INPUT|TEXTAREA|SELECT|BUTTON/.test(target.nodeName)) {
-      if (evt.keyCode === 13) {
-        console.log("ente");
-        if (billProducts.length > 0) addOrder();
-      } else {
-        return;
-      }
-    }
-  });
+  // window.addEventListener("keydown", (evt) => {
+  //   evt = evt || window.event;
+  //   var target = evt.target || evt.srcElement;
+  //   if (!/INPUT|TEXTAREA|SELECT|BUTTON/.test(target.nodeName)) {
+  //     if (evt.key === "Enter") {
+  //       console.log("ente");
+  //       if (billProducts.length > 0) addOrder();
+  //     } else {
+  //       return;
+  //     }
+  //   }
+  // });
 
   return (
     <Stack backgroundColor="#eef2f9" ml="250px" h="100vh">

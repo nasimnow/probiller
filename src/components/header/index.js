@@ -49,6 +49,8 @@ const Header = () => {
       backgroundColor="white"
       boxShadow="rgba(149, 157, 165, 0.2) 0px 0px 16px"
     >
+      <Box h="6px" backgroundColor="gray.500" width="100%"></Box>
+
       <Stack direction="column" p="20px">
         <Image p="10px" mb="30px" w="80%" src={logo} borderRadius="10px" />
 

@@ -42,6 +42,7 @@ import BillPrint from "../components/billPrint";
 import { UilTrashAlt, UilReceiptAlt, UilPrint } from "@iconscout/react-unicons";
 import { useHistory } from "react-router-dom";
 import sendAsync from "../message-control/renderrer";
+import { DateTime } from "luxon";
 
 // Note: `user` comes from the URL, courtesy of our router
 const Orders = () => {
@@ -173,9 +174,7 @@ const Orders = () => {
             <Tr>
               <Th>id</Th>
               <Th>Date</Th>
-              <Th>Name</Th>
-
-              <Th>Mobile</Th>
+              <Th>Customer</Th>
               <Th isNumeric>Total Amount</Th>
               <Th>Payment</Th>
               {/* <Th>Paid</Th> */}
@@ -208,14 +207,29 @@ const Orders = () => {
             {orders?.map((item) => (
               <Tr key={item.id}>
                 <Td>{item.id}</Td>
-                <Td>{`${new Date(item.date).toLocaleDateString(
-                  "en-IN"
-                )} - ${new Date(item.date).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}`}</Td>
-                <Td>{item.name}</Td>
-                <Td>{item.mobile}</Td>
+                <Td>
+                  <Stack spacing="0">
+                    <Text>
+                      {DateTime.fromISO(
+                        new Date(item.date).toISOString()
+                      ).toFormat("dd/MM/yyyy")}
+                    </Text>
+                    <Text fontSize="13px">
+                      {DateTime.fromISO(
+                        new Date(item.date).toISOString()
+                      ).toFormat("t")}
+                    </Text>
+                  </Stack>
+                </Td>
+                <Td>
+                  <Stack spacing="0">
+                    <Text>{item.name}</Text>
+                    <Text fontSize="13px" fontWeight="bold" color="#787878">
+                      {item.mobile}
+                    </Text>
+                  </Stack>
+                </Td>
+
                 <Td isNumeric fontWeight="bold">
                   ₹{item.total_amount}
                 </Td>
