@@ -5,9 +5,12 @@ const OrdersCountChart = ({ datas }) => {
   const ordersCountLabels = [];
   const ordersCountData = [];
 
-  for (let i = 0; i < 2; i++) {
-    ordersCountLabels.push(datas[i].dates);
-    ordersCountData.push(datas[i].counts);
+  const revenueLabels = [];
+  const revenueData = [];
+
+  for (let i = 0; i < datas.orders.length; i++) {
+    ordersCountLabels.push(datas.orders[i].dates);
+    ordersCountData.push(datas.orders[i].counts);
   }
 
   const data = {
@@ -19,26 +22,19 @@ const OrdersCountChart = ({ datas }) => {
         backgroundColor: "#fd7670",
         borderColor: "#fd7670",
         borderWidth: 1,
+        tension: 0,
       },
     ],
   };
 
   const options = {
     scales: {
-      yAxes: [
-        {
-          ticks: {
-            beginAtZero: true,
-          },
-        },
-      ],
+      y: {
+        beginAtZero: true,
+      },
     },
   };
-  return (
-    <>
-      <Line data={data} options={options} width={300} height={150} />
-    </>
-  );
+  return <Line data={data} options={options} width={300} height={150} />;
 };
 
 export default OrdersCountChart;

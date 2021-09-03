@@ -5,14 +5,22 @@ const { spawn } = require("child_process");
 
 // Any directories you will be adding code/files into, need to be added to this array so webpack will pick them up
 const defaultInclude = path.resolve(__dirname, "src");
+const nodeModulesInclude = path.resolve(
+  __dirname,
+  "node_modules/react-date-range"
+);
 
 module.exports = {
   module: {
     rules: [
       {
         test: /\.css$/,
-        use: [{ loader: "style-loader" }, { loader: "css-loader" }],
-        include: defaultInclude,
+        use: [
+          { loader: "style-loader" },
+          { loader: "css-loader" },
+          { loader: "postcss-loader" },
+        ],
+        include: [defaultInclude, nodeModulesInclude],
       },
       {
         test: /\.jsx?$/,

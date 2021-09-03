@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Box,
   Flex,
@@ -6,6 +6,7 @@ import {
   GridItem,
   Heading,
   IconButton,
+  Button,
   Image,
   Stack,
   Text,
@@ -15,61 +16,101 @@ import {
   UilMoneyStack,
   UilPizzaSlice,
 } from "@iconscout/react-unicons";
+import "react-date-range/dist/styles.css";
+import "react-date-range/dist/theme/default.css";
 
 import sendAsync from "../message-control/renderrer";
 import OrdersCountChart from "../components/OrdersChart";
 import { DateTime } from "luxon";
+import { DateRange, DateRangePicker, DefinedRange } from "react-date-range";
 
 const Dashboard = (props) => {
-  const [ordersData, setOrdersData] = useState("");
   const [dashBoardStats, setDashboardStats] = useState({
     orders: "_",
     revenue: "_",
     items: "_",
   });
+  const todaysDate = new Date();
+  const [dateRange, setDateRange] = useState([
+    {
+      startDate: todaysDate,
+      endDate: todaysDate,
+      key: "selection",
+    },
+  ]);
   const [topItems, setTopItems] = useState([]);
+  const [isDateOpen, setIsDateOpen] = useState(false);
+  const [chartData, setChartData] = useState("");
 
-  //add datepicker
+  const getOrders = async () => {
+    let ordersResponse = await sendAsync(
+      `SELECT * FROM orders WHERE date BETWEEN '${DateTime.fromJSDate(
+        dateRange[0].startDate
+      ).toFormat("yyyy-MM-dd 00:00:00")}' AND '${DateTime.fromJSDate(
+        dateRange[0].endDate
+      ).toFormat("yyyy-MM-dd 24:00:00")}'`
+    );
+
+    let revenue = ordersResponse.reduce(
+      (sum, item) => sum + item.total_amount,
+      0
+    );
+
+    let items = ordersResponse.reduce(
+      (sum, item) => sum + JSON.parse(item.products).length,
+      0
+    );
+
+    setDashboardStats({
+      orders: ordersResponse.length,
+      revenue: "₹" + revenue,
+      items,
+    });
+    let count = {};
+    let itemsonly = ordersResponse.map((item) => JSON.parse(item.products));
+    itemsonly = itemsonly.reduce((a, b) => a.concat(b), []);
+    for (let i of itemsonly) {
+      count.hasOwnProperty(i.id)
+        ? (count[i.id] += i.qty)
+        : (count[i.id] = i.qty);
+    }
+    let result = Object.keys(count).map((key) => ({
+      id: +key,
+      count: count[key],
+      name: itemsonly.find((item) => item.id === +key).name,
+    }));
+    setTopItems(result.sort((a, b) => a.count - b.count).reverse());
+
+    let ordersChartData = await sendAsync(
+      `select date, count(id)from orders  WHERE date BETWEEN '${DateTime.fromJSDate(
+        dateRange[0].startDate
+      ).toFormat("yyyy-MM-dd 00:00:00")}' AND '${DateTime.fromJSDate(
+        dateRange[0].endDate
+      ).toFormat("yyyy-MM-dd 24:00:00")}' group by date(date) `
+    );
+
+    console.log(ordersChartData);
+    let revenueChartData = await sendAsync(
+      `select date, sum(total_amount) as total from orders  WHERE date BETWEEN '${DateTime.fromJSDate(
+        dateRange[0].startDate
+      ).toFormat("yyyy-MM-dd 00:00:00")}' AND '${DateTime.fromJSDate(
+        dateRange[0].endDate
+      ).toFormat("yyyy-MM-dd 24:00:00")}'  group by date(date)`
+    );
+
+    ordersChartData = ordersChartData.map((item) => ({
+      dates: DateTime.fromJSDate(new Date(item.date)).toFormat("dd-MM-yyyy"),
+      counts: item["count(id)"],
+    }));
+
+    revenueChartData = revenueChartData.map((item) => ({
+      dates: DateTime.fromJSDate(new Date(item.date)).toFormat("dd-MM-yyyy"),
+      counts: item.total,
+    }));
+
+    setChartData({ orders: ordersChartData, revenue: revenueChartData });
+  };
   useEffect(() => {
-    const getOrders = async () => {
-      let ordersResponse = await sendAsync(
-        `SELECT * FROM orders WHERE date BETWEEN '${DateTime.now().toFormat(
-          "yyyy-MM-dd"
-        )}' AND '${DateTime.local().plus({ days: 1 }).toFormat("yyyy-MM-dd")}'`
-      );
-
-      let revenue = ordersResponse.reduce(
-        (sum, item) => sum + item.total_amount,
-        0
-      );
-
-      let items = ordersResponse.reduce(
-        (sum, item) => sum + JSON.parse(item.products).length,
-        0
-      );
-
-      setDashboardStats({
-        orders: ordersResponse.length,
-        revenue: "₹" + revenue,
-        items,
-      });
-      let count = {};
-      let itemsonly = ordersResponse.map((item) => JSON.parse(item.products));
-      itemsonly = itemsonly.reduce((a, b) => a.concat(b), []);
-      for (let i of itemsonly) {
-        count.hasOwnProperty(i.id)
-          ? (count[i.id] += i.qty)
-          : (count[i.id] = i.qty);
-      }
-      let result = Object.keys(count).map((key) => ({
-        id: +key,
-        count: count[key],
-        name: itemsonly.find((item) => item.id === +key).name,
-      }));
-
-      setTopItems(result.sort((a, b) => a.count - b.count).reverse());
-    };
-
     getOrders();
   }, []);
 
@@ -97,14 +138,64 @@ const Dashboard = (props) => {
 
   return (
     <Stack backgroundColor="#eef2f9" p="40px" ml="250px" h="100vh" spacing="0">
-      <Heading size="lg">Dashboard</Heading>
-      <Text>{new Date().toDateString()}</Text>
-      <Grid
-        width="100%"
-        templateColumns="2fr 1fr"
-        templateRows="1fr 3fr"
-        gap={4}
-      >
+      <Stack w="100%" justifyContent="space-between" flexDirection="row">
+        <Stack spacing="0">
+          <Heading size="lg">Dashboard</Heading>
+          <Text>{new Date().toDateString()}</Text>
+        </Stack>
+        <Stack position="relative" spacing="0" flexDirection="column">
+          <Stack
+            spacing="0"
+            flexDirection="row"
+            cursor="pointer"
+            onClick={() => setIsDateOpen((old) => !old)}
+          >
+            <Box
+              borderRadius="6px"
+              backgroundColor="white"
+              p="10px"
+              mr="14px !important"
+              _hover={{ backgroundColor: "#e6e6e6" }}
+            >
+              {DateTime.fromJSDate(dateRange[0].startDate).toFormat(
+                "dd/MM/yyyy"
+              )}
+
+              {dateRange[0]?.startDate !== dateRange[0]?.endDate &&
+                " - " +
+                  DateTime.fromJSDate(dateRange[0].endDate).toFormat(
+                    "dd/MM/yyyy"
+                  )}
+            </Box>
+          </Stack>
+          {isDateOpen && (
+            <Box position="absolute" top="60px" right="40px">
+              <DateRange
+                onChange={(item) => {
+                  setDateRange([item.selection]);
+                }}
+                ranges={dateRange}
+                showMonthAndYearPickers={false}
+                showDateDisplay={false}
+              />
+              <Button
+                bgColor="#00d67e"
+                mt="10px"
+                float="right"
+                color="white"
+                onClick={() => {
+                  getOrders();
+                  setIsDateOpen(false);
+                }}
+              >
+                Update
+              </Button>
+            </Box>
+          )}
+        </Stack>
+      </Stack>
+
+      <Grid width="100%" templateColumns="2fr 1fr" gap={4}>
         <GridItem>
           <Flex
             mt="30px !important"
@@ -137,9 +228,8 @@ const Dashboard = (props) => {
               color="#FFC09F"
             />
           </Flex>
-          {/* {ordersData !== "" && <OrdersCountChart datas={ordersData} />} */}
         </GridItem>
-        <GridItem>
+        <GridItem rowSpan={2}>
           <Flex
             mt="30px !important"
             borderRadius="15px"
@@ -167,6 +257,22 @@ const Dashboard = (props) => {
                 </Stack>
               ))}
             </Stack>
+          </Flex>
+        </GridItem>
+        <GridItem>
+          <Flex
+            borderRadius="15px"
+            bgColor="white"
+            justifyContent="space-around"
+            flexDirection="column"
+            p="20px"
+            boxShadow="rgba(100, 100, 111, 0.2) 0px 7px 29px 0px"
+            alignItems="center"
+          >
+            <Heading w="100%" size="md" alignSelf="flex-start">
+              Orders
+            </Heading>
+            {chartData !== "" && <OrdersCountChart datas={chartData} />}
           </Flex>
         </GridItem>
       </Grid>

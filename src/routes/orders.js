@@ -52,17 +52,23 @@ const Orders = () => {
   const [recieptOpen, setRecieptOpen] = useState(false);
   const [modalType, setModalType] = useState("");
   const [paid, setPaid] = useState("");
+  const [page, setPage] = useState(1);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const history = useHistory();
+  const pageItemsMax = 10;
 
   useEffect(() => {
     const getOrders = async () => {
-      const response = await sendAsync("SELECT * FROM orders ORDER BY id DESC");
-      setOrders(response);
+      const response = await sendAsync(
+        `SELECT * FROM orders ORDER BY id DESC LIMIt ${
+          (page - 1) * pageItemsMax
+        },${pageItemsMax}`
+      );
+      setOrders((old) => [...old, ...response]);
       setIsLoading(false);
     };
     getOrders();
-  }, []);
+  }, [page]);
 
   const printReciept = (orderDetails) => {
     setPaid("");
@@ -109,7 +115,7 @@ const Orders = () => {
   };
 
   return (
-    <Stack backgroundColor="#eef2f9" ml="250px" h="100vh">
+    <Stack backgroundColor="#eef2f9" ml="250px" height="100%" minHeight="100vh">
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
@@ -267,6 +273,10 @@ const Orders = () => {
                 </Td>
               </Tr>
             ))}
+
+            <Button onClick={() => setPage((old) => old + 1)} mt="10px">
+              Load More
+            </Button>
           </Tbody>
         </Table>
       </Box>

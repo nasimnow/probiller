@@ -5,10 +5,19 @@ const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
 // Any directories you will be adding code/files into, need to be added to this array so webpack will pick them up
 const defaultInclude = path.resolve(__dirname, "src");
+const nodeModulesInclude = path.resolve(
+  __dirname,
+  "node_modules/react-date-range"
+);
 
 module.exports = {
   module: {
     rules: [
+      {
+        test: /\.css$/,
+        use: [MiniCssExtractPlugin.loader, "css-loader", "postcss-loader"],
+        include: [defaultInclude, nodeModulesInclude],
+      },
       {
         test: /\.jsx?$/,
         use: [{ loader: "babel-loader" }],
