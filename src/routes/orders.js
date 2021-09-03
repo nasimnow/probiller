@@ -25,9 +25,6 @@ import {
   SkeletonCircle,
 } from "@chakra-ui/react";
 
-import html2canvas from "html2canvas";
-import printJS from "print-js";
-
 import {
   Modal,
   ModalOverlay,
@@ -43,6 +40,7 @@ import { UilTrashAlt, UilReceiptAlt, UilPrint } from "@iconscout/react-unicons";
 import { useHistory } from "react-router-dom";
 import sendAsync from "../message-control/renderrer";
 import { DateTime } from "luxon";
+import { useReactToPrint } from "react-to-print";
 
 // Note: `user` comes from the URL, courtesy of our router
 const Orders = () => {
@@ -77,26 +75,17 @@ const Orders = () => {
     setSelectedOrder(orderDetails);
   };
 
+  const printNow = useReactToPrint({
+    content: () => document.getElementById("order_reciept"),
+    pageStyle:
+      "@media print { body { margin: 0; color: #000; background-color: #fff; } img {width:100%;} }",
+  });
+
   const printProceed = () => {
     onClose();
     setRecieptOpen(true);
     setTimeout(async () => {
-      const node = document.getElementById("order_reciept");
-      html2canvas(node, {
-        allowTaint: true,
-        useCORS: true,
-        logging: true,
-      }).then((img) => {
-        try {
-          printJS({
-            printable: img.toDataURL("image/jpeg"),
-            type: "image",
-            base64: "true",
-          });
-        } catch (error) {
-          console.log(error);
-        }
-      });
+      printNow();
       setRecieptOpen(false);
     }, 100);
   };
@@ -154,7 +143,7 @@ const Orders = () => {
           </ModalBody>
         </ModalContent>
       </Modal>
-      {recieptOpen && <BillPrint data={selectedOrder} />}
+      {recieptOpen && <BillPrint data={{ ...selectedOrder, paid }} />}
       <Box
         borderRadius="15px"
         m="40px"
@@ -252,7 +241,9 @@ const Orders = () => {
                 <Td>
                   <IconButton
                     p="2px"
-                    onClick={() => printReciept({ ...item, paid })}
+                    onClick={() => {
+                      printReciept({ ...item, paid });
+                    }}
                     borderRadius="full"
                     icon={<UilPrint size="20px" color="orange" />}
                   />
@@ -273,12 +264,11 @@ const Orders = () => {
                 </Td>
               </Tr>
             ))}
-
-            <Button onClick={() => setPage((old) => old + 1)} mt="10px">
-              Load More
-            </Button>
           </Tbody>
         </Table>
+        <Button onClick={() => setPage((old) => old + 1)} mt="10px">
+          Load More
+        </Button>
       </Box>
     </Stack>
   );

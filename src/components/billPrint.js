@@ -6,28 +6,27 @@ const BillPrint = ({ data }) => (
   <Stack
     id="order_reciept"
     position="relative"
-    w="7.5cm"
+    w="7.8cm"
     h="auto"
-    border="1px solid grey"
-    p="15px"
     alignItems="center"
     spacing="0"
   >
     {/* <Text fontWeight="bold">SKEWERS</Text> */}
     <Image src={logo} w="70%" />
-    <Text fontSize="12px" textAlign="center" pb="5px" pt="4px">
+    <Text fontSize="15px" textAlign="center" pb="5px" pt="1px">
       Narikkuni Road, poonoor,
     </Text>
-    <Text fontSize="12px" fontWeight="medium">
+    <Text fontSize="15px" fontWeight="medium">
       Mob: 9562478470
     </Text>
-    <Stack direction="column" w="100%" pt="12px">
-      <Text fontSize="12px">{`Name: ${data.name}`} </Text>
-      <Text fontSize="12px">{`Mobile: ${data.mobile}`} </Text>
+    <Stack direction="column" w="100%" pt="15px" spacing="0.5px">
+      <Text fontSize="15px">{`Name: ${data.name}`} </Text>
+      <Text fontSize="15px">{`Mobile: ${data.mobile}`} </Text>
     </Stack>
-    <Stack direction="row" w="100%" justifyContent="space-between" pt="12px">
-      <Text fontSize="12px">{`Bill#:${data.id}`} </Text>
-      <Text fontSize="12px">{`Date: ${new Date(data.date).toLocaleDateString(
+
+    <Stack direction="row" w="100%" justifyContent="space-between" pt="15px">
+      <Text fontSize="15px">{`Bill#:${data.id}`} </Text>
+      <Text fontSize="15px">{`Date: ${new Date(data.date).toLocaleDateString(
         "en-IN"
       )} - ${new Date(data.date).toLocaleTimeString([], {
         hour: "2-digit",
@@ -41,6 +40,8 @@ const BillPrint = ({ data }) => (
       justifyContent="space-between"
       w="100%"
       fontWeight="medium"
+      borderBottom="1px solid #000"
+      paddingBottom="6px"
     >
       <Text w="10%">No</Text>
       <Text w="40%">Item</Text>
@@ -54,7 +55,7 @@ const BillPrint = ({ data }) => (
         key={i}
         pt="10px"
         direction="row"
-        fontSize="13px"
+        fontSize="14px"
         justifyContent="space-between"
         w="100%"
       >
