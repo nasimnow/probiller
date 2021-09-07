@@ -35,6 +35,7 @@ import {
 
 import { UilTrashAlt, UilEdit } from "@iconscout/react-unicons";
 import ProductAdd from "./product_add";
+import ConfirmDialog from "../components/confirmDialog";
 
 // Note: `user` comes from the URL, courtesy of our router
 const Products = () => {
@@ -58,13 +59,6 @@ const Products = () => {
   useEffect(() => {
     getProducts();
   }, []);
-
-  const deleteProduct = async (productId) => {
-    if (confirm("Are you sure")) {
-      await sendAsync(`DELETE FROM products WHERE id=${productId}`);
-      setProducts((old) => old.filter((item) => item.id !== productId));
-    }
-  };
 
   return (
     <Stack backgroundColor="#eef2f9" ml="250px" h="100vh">
@@ -119,7 +113,8 @@ const Products = () => {
                 <Td isNumeric fontWeight="bold">
                   ₹{item.price}
                 </Td>
-                <Td>
+                <Td display="flex" >
+
                   <IconButton
                     onClick={() => {
                       setItemSelected(item);
@@ -129,10 +124,22 @@ const Products = () => {
                     borderRadius="full"
                     icon={<UilEdit size="20px" color="green" />}
                   />
-                  <IconButton
-                    onClick={() => deleteProduct(item.id)}
-                    borderRadius="full"
-                    icon={<UilTrashAlt size="20px" color="red" />}
+
+                  <ConfirmDialog
+                    trigger={
+                      <IconButton
+                        borderRadius="full"
+                        icon={<UilTrashAlt size="20px" color="red" />}
+                      />
+                    }
+                    callback={async () => {
+                      await sendAsync(
+                        `DELETE FROM products WHERE id=${item.id}`
+                      );
+                      setProducts((old) =>
+                        old.filter((prd) => prd.id !== item.id)
+                      );
+                    }}
                   />
                 </Td>
               </Tr>

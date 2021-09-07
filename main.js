@@ -44,7 +44,7 @@ function createWindow() {
       nodeIntegration: true,
       contextIsolation: false,
     },
-    icon: __dirname + "/public/logo.png",
+    icon: __dirname + "/src/assets/logo.png",
   });
   mainWindow.maximize();
   mainWindow.show();

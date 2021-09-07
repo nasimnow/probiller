@@ -229,7 +229,7 @@ const Dashboard = (props) => {
             />
           </Flex>
         </GridItem>
-        <GridItem rowSpan={2}>
+        <GridItem rowSpan={10}>
           <Flex
             mt="30px !important"
             borderRadius="15px"

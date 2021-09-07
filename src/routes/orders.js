@@ -41,6 +41,7 @@ import { useHistory } from "react-router-dom";
 import sendAsync from "../message-control/renderrer";
 import { DateTime } from "luxon";
 import { useReactToPrint } from "react-to-print";
+import ConfirmDialog from "../components/confirmDialog";
 
 // Note: `user` comes from the URL, courtesy of our router
 const Orders = () => {
@@ -88,13 +89,6 @@ const Orders = () => {
       printNow();
       setRecieptOpen(false);
     }, 100);
-  };
-
-  const deleteOrder = async (id) => {
-    if (confirm(`Deleting Order ${id}`)) {
-      await sendAsync(`DELETE FROM orders WHERE id=${id}`);
-      setOrders((old) => old.filter((item) => item.id !== id));
-    }
   };
 
   const downloadReciept = (orderDetails) => {
@@ -172,7 +166,7 @@ const Orders = () => {
               <Th>Customer</Th>
               <Th isNumeric>Total Amount</Th>
               <Th>Payment</Th>
-              {/* <Th>Paid</Th> */}
+
               <Th>Actions</Th>
             </Tr>
           </Thead>
@@ -239,28 +233,43 @@ const Orders = () => {
                 </Td>
 
                 <Td>
-                  <IconButton
-                    p="2px"
-                    onClick={() => {
-                      printReciept({ ...item, paid });
-                    }}
-                    borderRadius="full"
-                    icon={<UilPrint size="20px" color="orange" />}
-                  />
-                  <IconButton
-                    p="2px"
-                    ml="10px"
-                    onClick={() => downloadReciept({ ...item, paid })}
-                    borderRadius="full"
-                    icon={<UilReceiptAlt size="20px" color="green" />}
-                  />
-                  <IconButton
-                    p="2px"
-                    ml="10px"
-                    onClick={() => deleteOrder(item.id)}
-                    borderRadius="full"
-                    icon={<UilTrashAlt size="20px" color="red" />}
-                  />
+                  <Stack direction="row">
+                    <IconButton
+                      p="2px"
+                      onClick={() => {
+                        printReciept({ ...item, paid });
+                      }}
+                      borderRadius="full"
+                      icon={<UilPrint size="20px" color="orange" />}
+                    />
+                    <IconButton
+                      p="2px"
+                      ml="10px"
+                      onClick={() => downloadReciept({ ...item, paid })}
+                      borderRadius="full"
+                      icon={<UilReceiptAlt size="20px" color="green" />}
+                    />
+
+                    <ConfirmDialog
+                      caption={`Are you sure to delete order #${item.id}`}
+                      trigger={
+                        <IconButton
+                          p="2px"
+                          ml="10px"
+                          borderRadius="full"
+                          icon={<UilTrashAlt size="20px" color="red" />}
+                        />
+                      }
+                      callback={async () => {
+                        await sendAsync(
+                          `DELETE FROM orders WHERE id=${item.id}`
+                        );
+                        setOrders((old) =>
+                          old.filter((ordr) => ordr.id !== item.id)
+                        );
+                      }}
+                    />
+                  </Stack>
                 </Td>
               </Tr>
             ))}
