@@ -49,31 +49,30 @@ const Orders = () => {
   const [selectedOrder, setSelectedOrder] = useState();
   const [orders, setOrders] = useState([]);
   const [recieptOpen, setRecieptOpen] = useState(false);
-  const [modalType, setModalType] = useState("");
-  const [paid, setPaid] = useState("");
   const [page, setPage] = useState(1);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const history = useHistory();
   const pageItemsMax = 10;
 
-  useEffect(() => {
-    const getOrders = async () => {
-      const response = await sendAsync(
-        `SELECT * FROM orders ORDER BY id DESC LIMIt ${
-          (page - 1) * pageItemsMax
-        },${pageItemsMax}`
-      );
-      setOrders((old) => [...old, ...response]);
-      setIsLoading(false);
-    };
-    getOrders();
-  }, [page]);
+  const getOrders = async (pagenNo) => {
+    const response = await sendAsync(
+      `SELECT * FROM orders ORDER BY id DESC LIMIt ${
+        (pagenNo - 1) * pageItemsMax
+      },${pageItemsMax}`
+    );
+    setOrders((old) => [...old, ...response]);
+    setIsLoading(false);
+  };
+
+  useEffect(() => getOrders(page), [page]);
 
   const printReciept = (orderDetails) => {
-    setPaid("");
-    setModalType("paid");
-    onOpen();
     setSelectedOrder(orderDetails);
+    setRecieptOpen(true);
+    setTimeout(async () => {
+      printNow();
+      setRecieptOpen(false);
+    }, 100);
   };
 
   const printNow = useReactToPrint({
@@ -82,18 +81,8 @@ const Orders = () => {
       "@media print { body { margin: 0; color: #000; background-color: #fff; } img {width:100%;} }",
   });
 
-  const printProceed = () => {
-    onClose();
-    setRecieptOpen(true);
-    setTimeout(async () => {
-      printNow();
-      setRecieptOpen(false);
-    }, 100);
-  };
-
   const downloadReciept = (orderDetails) => {
     setSelectedOrder(orderDetails);
-    setModalType("reciept");
     onOpen();
   };
 
@@ -105,39 +94,11 @@ const Orders = () => {
           <ModalHeader>Order#:{selectedOrder?.id}</ModalHeader>
           <ModalCloseButton />
           <ModalBody display="grid" placeItems="center" mb="10px">
-            {modalType == "reciept" ? (
-              <BillPrint data={selectedOrder} />
-            ) : (
-              <Stack w="100%">
-                <FormControl w="80%">
-                  <FormLabel>Paid</FormLabel>
-                  <Input
-                    autoFocus
-                    w="100%"
-                    type="number"
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") paid && printProceed();
-                    }}
-                    onChange={(e) => setPaid(e.target.value)}
-                    value={paid}
-                  />
-                </FormControl>
-                <Button
-                  bgColor="#00d67e"
-                  color="white"
-                  w="130px"
-                  mt="30px"
-                  isDisabled={!paid}
-                  onClick={printProceed}
-                >
-                  Proceed
-                </Button>
-              </Stack>
-            )}
+            <BillPrint data={selectedOrder} />
           </ModalBody>
         </ModalContent>
       </Modal>
-      {recieptOpen && <BillPrint data={{ ...selectedOrder, paid }} />}
+      {recieptOpen && <BillPrint data={{ ...selectedOrder }} />}
       <Box
         borderRadius="15px"
         m="40px"
@@ -237,7 +198,7 @@ const Orders = () => {
                     <IconButton
                       p="2px"
                       onClick={() => {
-                        printReciept({ ...item, paid });
+                        printReciept({ ...item });
                       }}
                       borderRadius="full"
                       icon={<UilPrint size="20px" color="orange" />}
@@ -245,7 +206,7 @@ const Orders = () => {
                     <IconButton
                       p="2px"
                       ml="10px"
-                      onClick={() => downloadReciept({ ...item, paid })}
+                      onClick={() => downloadReciept({ ...item })}
                       borderRadius="full"
                       icon={<UilReceiptAlt size="20px" color="green" />}
                     />

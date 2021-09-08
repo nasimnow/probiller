@@ -71,8 +71,8 @@ const Dashboard = (props) => {
     itemsonly = itemsonly.reduce((a, b) => a.concat(b), []);
     for (let i of itemsonly) {
       count.hasOwnProperty(i.id)
-        ? (count[i.id] += i.qty)
-        : (count[i.id] = i.qty);
+        ? (count[i.id] = +count[i.id] + +i.qty)
+        : (count[i.id] = +i.qty);
     }
     let result = Object.keys(count).map((key) => ({
       id: +key,
@@ -137,7 +137,7 @@ const Dashboard = (props) => {
   };
 
   return (
-    <Stack backgroundColor="#eef2f9" p="40px" ml="250px" h="100vh" spacing="0">
+    <Stack backgroundColor="#eef2f9" p="40px" ml="250px" h="100%" spacing="0">
       <Stack w="100%" justifyContent="space-between" flexDirection="row">
         <Stack spacing="0">
           <Heading size="lg">Dashboard</Heading>

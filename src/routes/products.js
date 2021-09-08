@@ -10,7 +10,6 @@ import {
   useDisclosure,
   Button,
 } from "@chakra-ui/react";
-import Header from "../components/header";
 import {
   Table,
   Thead,
@@ -61,7 +60,7 @@ const Products = () => {
   }, []);
 
   return (
-    <Stack backgroundColor="#eef2f9" ml="250px" h="100vh">
+    <Stack backgroundColor="#eef2f9" ml="250px" h="100%" minHeight="100vh">
       <Box
         borderRadius="15px"
         m="40px"
@@ -113,8 +112,7 @@ const Products = () => {
                 <Td isNumeric fontWeight="bold">
                   ₹{item.price}
                 </Td>
-                <Td display="flex" >
-
+                <Td display="flex">
                   <IconButton
                     onClick={() => {
                       setItemSelected(item);

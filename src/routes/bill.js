@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import "@babel/polyfill";
 import {
   Stack,
@@ -8,8 +8,7 @@ import {
   Input,
   FormLabel,
   FormControl,
-  InputGroup,
-  InputRightElement,
+  IconButton,
 } from "@chakra-ui/react";
 import {
   Radio,
@@ -20,24 +19,42 @@ import {
   Tr,
   Th,
   Td,
+  useDisclosure,
 } from "@chakra-ui/react";
+import { Modal, ModalOverlay, ModalContent } from "@chakra-ui/react";
+import { UilTrashAlt } from "@iconscout/react-unicons";
+
 import sendAsync from "../message-control/renderrer";
 
 import AsyncSelect from "react-select/async";
 import { useHistory } from "react-router-dom";
+import { useReactToPrint } from "react-to-print";
+import BillPrint from "../components/billPrint";
 
 // Note: `user` comes from the URL, courtesy of our router
 const Bill = () => {
-  const [selectedQty, setSelectedQty] = useState(1);
   const [customerName, setCustomerName] = useState("");
   const [customerMobile, setCustomerMobile] = useState("");
-  const addProductRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState();
   const [billProducts, setBillProducts] = useState([]);
+  const [selectedItem, setSelectedItem] = useState("");
   const [payment, setPayment] = useState("CASH");
-  const history = useHistory();
+  const [toPrint, setToPrint] = useState("");
+  const [recieptOpen, setRecieptOpen] = useState(false);
 
+  const history = useHistory();
+  const selectRef = useRef();
+
+  const { isOpen, onOpen, onClose } = useDisclosure();
+
+  const handleQuantity = (i, value) => {
+    let productsCopy = [...billProducts];
+    productsCopy[i] = {
+      ...productsCopy[i],
+      qty: value,
+    };
+    setBillProducts(productsCopy);
+  };
   const searchProducts = async (searchTerm, callBack) => {
     const response = await sendAsync(`SELECT * FROM products
     WHERE name LIKE '%${searchTerm}%'`);
@@ -48,6 +65,20 @@ const Bill = () => {
 
     callBack(filteredResponse);
   };
+
+  const printReciept = () => {
+    setRecieptOpen(true);
+    setTimeout(async () => {
+      printNow();
+      setRecieptOpen(false);
+    }, 100);
+  };
+
+  const printNow = useReactToPrint({
+    content: () => document.getElementById("order_reciept"),
+    pageStyle:
+      "@media print { body { margin: 0; color: #000; background-color: #fff; } img {width:100%;} }",
+  });
 
   const addOrder = async () => {
     setIsLoading(true);
@@ -60,26 +91,70 @@ const Bill = () => {
         0
       )}','${payment}','${customerName}','${customerMobile}')`
     );
-    // history.push("/orders");
-    setIsLoading(false);
-    history.push("/orders");
-  };
+    console.log(resp);
 
-  // window.addEventListener("keydown", (evt) => {
-  //   evt = evt || window.event;
-  //   var target = evt.target || evt.srcElement;
-  //   if (!/INPUT|TEXTAREA|SELECT|BUTTON/.test(target.nodeName)) {
-  //     if (evt.key === "Enter") {
-  //       console.log("ente");
-  //       if (billProducts.length > 0) addOrder();
-  //     } else {
-  //       return;
-  //     }
-  //   }
-  // });
+    const latestOrder = await sendAsync(
+      "SELECT * FROM orders ORDER BY id DESC LIMIT 1"
+    );
+    setToPrint(latestOrder[0]);
+    setBillProducts([]);
+    setCustomerMobile("");
+    setCustomerName("");
+    setPayment("CASH");
+    printReciept();
+
+    setIsLoading(false);
+    // history.push("/orders");
+  };
 
   return (
     <Stack backgroundColor="#eef2f9" ml="250px" h="100vh">
+      {recieptOpen && <BillPrint data={{ ...toPrint }} />}
+
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        onOpen={onOpen}
+        blockScrollOnMount={true}
+        closeOnOverlayClick={false}
+      >
+        <ModalOverlay />
+        <ModalContent>
+          <form>
+            <Stack padding="30px">
+              <Input
+                type="number"
+                value={selectedItem.qty}
+                onChange={(e) =>
+                  setSelectedItem((old) => ({ ...old, qty: +e.target.value }))
+                }
+                mb="10px"
+              />
+              <Button
+                bgColor="#00d67e"
+                color="white"
+                type="submit"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setBillProducts((old) => [
+                    ...old,
+                    {
+                      ...selectedItem,
+                      qty:
+                        selectedItem.qty === "" || selectedItem.qty === 0
+                          ? 1
+                          : selectedItem.qty,
+                    },
+                  ]);
+                  onClose();
+                }}
+              >
+                Add Item
+              </Button>
+            </Stack>
+          </form>
+        </ModalContent>
+      </Modal>
       <Stack
         borderRadius="15px"
         m="40px"
@@ -112,58 +187,18 @@ const Bill = () => {
         </Stack>
         <Box w="40%">
           <AsyncSelect
+            ref={selectRef}
             loadOptions={searchProducts}
             onChange={(input) => {
-              setSelectedProduct({ ...input });
-              setTimeout(() => addProductRef.current.focus(), 100);
+              setSelectedItem({ ...input.value, qty: "" });
+              onOpen();
+
+              // setBillProducts((old) => [...old, { ...input.value, qty: 1 }]);
+
+              // selectRef.current.focus();
             }}
-            value={selectedProduct}
           />
         </Box>
-        {selectedProduct && (
-          <Stack direction="row" mt="20px">
-            <FormControl w="160px">
-              <FormLabel>Price</FormLabel>
-              <Text>₹{selectedProduct?.value?.price}</Text>
-            </FormControl>
-            <FormControl w="100px">
-              <FormLabel>Qty</FormLabel>
-              <InputGroup>
-                <Input
-                  type="number"
-                  value={selectedQty}
-                  onChange={(e) => setSelectedQty(e.target.value)}
-                />
-                <InputRightElement width="4.5rem">
-                  <Button
-                    h="1.75rem"
-                    size="sm"
-                    onClick={() => setSelectedQty((old) => old + 1)}
-                  >
-                    +
-                  </Button>
-                </InputRightElement>
-              </InputGroup>
-            </FormControl>
-          </Stack>
-        )}
-
-        <Button
-          ref={addProductRef}
-          w="130px"
-          mt="30px"
-          isDisabled={!selectedProduct && selectedQty}
-          onClick={() => {
-            setBillProducts((old) => [
-              ...old,
-              { ...selectedProduct.value, qty: selectedQty },
-            ]);
-            setSelectedProduct("");
-            setSelectedQty(1);
-          }}
-        >
-          Add Product
-        </Button>
 
         <Table variant="simple" mt="20px">
           <Thead>
@@ -171,8 +206,9 @@ const Bill = () => {
               <Th>No</Th>
               <Th>Item</Th>
               <Th isNumeric>Price</Th>
-              <Th isNumeric>Qty</Th>
+              <Th>Qty</Th>
               <Th isNumeric>Total</Th>
+              <Th isNumeric>Delete</Th>
             </Tr>
           </Thead>
           <Tbody>
@@ -181,8 +217,39 @@ const Bill = () => {
                 <Td>{i + 1}</Td>
                 <Td>{item.name}</Td>
                 <Td isNumeric>₹{item.price}</Td>
-                <Td isNumeric>{item.qty}</Td>
+                <Td>
+                  <Stack spacing={1} direction="row">
+                    <Button
+                      isDisabled={item.qty === 1}
+                      onClick={() => handleQuantity(i, +item.qty - 1)}
+                    >
+                      -
+                    </Button>
+                    <Input
+                      w="80px"
+                      type="number"
+                      onChange={(e) => handleQuantity(i, +e.target.value)}
+                      value={item.qty}
+                    />
+                    <Button onClick={() => handleQuantity(i, +item.qty + 1)}>
+                      +
+                    </Button>
+                  </Stack>
+                </Td>
                 <Td isNumeric>₹{item.price * item.qty}</Td>
+                <Td isNumeric>
+                  <IconButton
+                    onClick={() => {
+                      setBillProducts((old) =>
+                        old.filter((_, currIndex) => i !== currIndex)
+                      );
+                    }}
+                    p="2px"
+                    ml="10px"
+                    borderRadius="full"
+                    icon={<UilTrashAlt size="20px" color="red" />}
+                  />
+                </Td>
               </Tr>
             ))}
           </Tbody>
