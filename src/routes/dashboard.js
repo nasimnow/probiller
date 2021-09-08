@@ -29,6 +29,7 @@ const Dashboard = (props) => {
     orders: "_",
     revenue: "_",
     items: "_",
+    revenueBreak: { cash: 0, bank: 0 },
   });
   const todaysDate = new Date();
   const [dateRange, setDateRange] = useState([
@@ -51,10 +52,15 @@ const Dashboard = (props) => {
       ).toFormat("yyyy-MM-dd 24:00:00")}'`
     );
 
-    let revenue = ordersResponse.reduce(
-      (sum, item) => sum + item.total_amount,
-      0
-    );
+    let cashRev = 0;
+    let bankRev = 0;
+
+    let revenue = ordersResponse.reduce((sum, item) => {
+      item.payment === "CASH"
+        ? (cashRev += item.total_amount)
+        : (bankRev += item.total_amount);
+      sum + item.total_amount;
+    }, 0);
 
     let items = ordersResponse.reduce(
       (sum, item) => sum + JSON.parse(item.products).length,
@@ -65,6 +71,7 @@ const Dashboard = (props) => {
       orders: ordersResponse.length,
       revenue: "₹" + revenue,
       items,
+      revenueBreak: { cash: cashRev, bank: bankRev },
     });
     let count = {};
     let itemsonly = ordersResponse.map((item) => JSON.parse(item.products));
@@ -215,12 +222,29 @@ const Dashboard = (props) => {
               name="Orders"
               icon={<UilArchive size="40px" color="#fff" />}
             />
-            <DetailsIcon
-              data={dashBoardStats.revenue}
-              name="Revenue"
-              icon={<UilMoneyStack size="40px" color="#fff" />}
-              color="#91C9FA"
-            />
+
+            <Stack flexDirection="row" spacing="0" h="60px">
+              <Box
+                backgroundColor="#FF9E9F"
+                boxSize="55px"
+                display="grid"
+                placeItems="center"
+                borderRadius="10px"
+              >
+                <UilMoneyStack size="40px" color="#fff" />
+              </Box>
+              <Stack spacing="0" pl="10px">
+                <Text color="#a6a6a6">Revenue</Text>
+                <Text fontWeight="bold" fontSize="22px">
+                  {dashBoardStats.orders}
+                </Text>
+                <Text fontSize="12px" fontWeight="medium" color="gray.500">
+                  Cash:{dashBoardStats.revenueBreak.cash} , Bank :
+                  {dashBoardStats.revenueBreak.bank}
+                </Text>
+              </Stack>
+            </Stack>
+
             <DetailsIcon
               data={dashBoardStats.items}
               name="Items"

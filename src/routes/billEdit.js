@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import "@babel/polyfill";
 import {
   Stack,
@@ -33,20 +33,35 @@ import BillPrint from "../components/billPrint";
 import { useHotkeys } from "react-hotkeys-hook";
 
 // Note: `user` comes from the URL, courtesy of our router
-const Bill = () => {
+const BillEdit = (props) => {
+  const orderId = props.match.params.id;
+
   const [customerName, setCustomerName] = useState("");
   const [customerMobile, setCustomerMobile] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [billProducts, setBillProducts] = useState([]);
   const [selectedItem, setSelectedItem] = useState("");
   const [payment, setPayment] = useState("CASH");
-  const [toPrint, setToPrint] = useState("");
-  const [recieptOpen, setRecieptOpen] = useState(false);
 
   const history = useHistory();
   const selectRef = useRef();
 
   const { isOpen, onOpen, onClose } = useDisclosure();
+
+  useEffect(() => {
+    const getOrder = async () => {
+      console.log(orderId);
+      let orderEdit = await sendAsync(
+        `SELECT * FROM orders WHERE  id=${orderId}`
+      );
+      orderEdit = orderEdit[0];
+      setCustomerName(orderEdit.name);
+      setCustomerMobile(orderEdit.mobile);
+      setBillProducts(JSON.parse(orderEdit.products));
+      setPayment(orderEdit.payment);
+    };
+    getOrder();
+  }, [orderId]);
 
   const handleQuantity = (i, value) => {
     let productsCopy = [...billProducts];
@@ -67,57 +82,25 @@ const Bill = () => {
     callBack(filteredResponse);
   };
 
-  const printReciept = () => {
-    setRecieptOpen(true);
-    setTimeout(async () => {
-      printNow();
-      setRecieptOpen(false);
-    }, 100);
-  };
-
-  const printNow = useReactToPrint({
-    content: () => document.getElementById("order_reciept"),
-    pageStyle:
-      "@media print { body { margin: 0; color: #000; background-color: #fff; } img {width:100%;} }",
-  });
-
-  const addOrder = async () => {
+  const updateOrder = async () => {
     if (billProducts.length < 1) return;
 
     setIsLoading(true);
 
     const resp = await sendAsync(
-      `INSERT INTO orders (date,products,total_amount,payment,name,mobile)VALUES(datetime('now', 'localtime'),'${JSON.stringify(
+      `UPDATE orders SET products='${JSON.stringify(
         billProducts
-      )}','${billProducts.reduce(
+      )}',total_amount='${billProducts.reduce(
         (prev, curr) => prev + curr.qty * curr.price,
         0
-      )}','${payment}','${customerName}','${customerMobile}')`
+      )}',payment='${payment}',name='${customerName}',mobile='${customerMobile}' WHERE id=${orderId}`
     );
-    console.log(resp);
-
-    const latestOrder = await sendAsync(
-      "SELECT * FROM orders ORDER BY id DESC LIMIT 1"
-    );
-    setToPrint(latestOrder[0]);
-    setBillProducts([]);
-    setCustomerMobile("");
-    setCustomerName("");
-    setPayment("CASH");
-    printReciept();
-
     setIsLoading(false);
-    // history.push("/orders");
+    history.push("/orders");
   };
-
-  useHotkeys("ctrl+enter", () => billProducts.length > 0 && addOrder(), {
-    enableOnTags: ["SELECT", "INPUT", "TEXTAREA"],
-  });
 
   return (
     <Stack backgroundColor="#eef2f9" ml="250px" h="100vh">
-      {recieptOpen && <BillPrint data={{ ...toPrint }} />}
-
       <Modal
         isOpen={isOpen}
         onClose={onClose}
@@ -170,7 +153,7 @@ const Bill = () => {
         boxShadow="rgba(100, 100, 111, 0.2) 0px 7px 29px 0px"
       >
         <Text fontWeight="bold" fontSize="20px" mb="20px">
-          Add Order
+          Edit Order
         </Text>
         <Stack width="80%" direction="row">
           <FormControl w="50%">
@@ -291,10 +274,10 @@ const Bill = () => {
             color="white"
             mr="80px"
             alignSelf="flex-end"
-            onClick={addOrder}
+            onClick={updateOrder}
             isLoading={isLoading}
           >
-            Bill Products
+            Update Order
           </Button>
         </Stack>
       </Stack>
@@ -302,4 +285,4 @@ const Bill = () => {
   );
 };
 
-export default Bill;
+export default BillEdit;

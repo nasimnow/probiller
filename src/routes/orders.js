@@ -36,7 +36,12 @@ import {
 } from "@chakra-ui/react";
 
 import BillPrint from "../components/billPrint";
-import { UilTrashAlt, UilReceiptAlt, UilPrint } from "@iconscout/react-unicons";
+import {
+  UilTrashAlt,
+  UilReceiptAlt,
+  UilPrint,
+  UilPen,
+} from "@iconscout/react-unicons";
 import { useHistory } from "react-router-dom";
 import sendAsync from "../message-control/renderrer";
 import { DateTime } from "luxon";
@@ -210,7 +215,14 @@ const Orders = () => {
                       borderRadius="full"
                       icon={<UilReceiptAlt size="20px" color="green" />}
                     />
-
+                    <IconButton
+                      p="2px"
+                      onClick={() => {
+                        history.push(`/billedit/${item.id}`);
+                      }}
+                      borderRadius="full"
+                      icon={<UilPen size="20px" color="orange" />}
+                    />
                     <ConfirmDialog
                       caption={`Are you sure to delete order #${item.id}`}
                       trigger={
