@@ -82,20 +82,17 @@ const Bill = () => {
   });
 
   const addOrder = async () => {
-    if (billProducts.length < 1) return;
-
     setIsLoading(true);
-
-    const resp = await sendAsync(
-      `INSERT INTO orders (date,products,total_amount,payment,name,mobile)VALUES(datetime('now', 'localtime'),'${JSON.stringify(
-        billProducts
-      )}','${billProducts.reduce(
-        (prev, curr) => prev + curr.qty * curr.price,
-        0
-      )}','${payment}','${customerName}','${customerMobile}')`
-    );
-    console.log(resp);
-
+    if (billProducts.length > 0) {
+      const resp = await sendAsync(
+        `INSERT INTO orders (date,products,total_amount,payment,name,mobile)VALUES(datetime('now', 'localtime'),'${JSON.stringify(
+          billProducts
+        )}','${billProducts.reduce(
+          (prev, curr) => prev + curr.qty * curr.price,
+          0
+        )}','${payment}','${customerName}','${customerMobile}')`
+      );
+    }
     const latestOrder = await sendAsync(
       "SELECT * FROM orders ORDER BY id DESC LIMIT 1"
     );
@@ -110,7 +107,7 @@ const Bill = () => {
     // history.push("/orders");
   };
 
-  useHotkeys("ctrl+enter", () => billProducts.length > 0 && addOrder(), {
+  useHotkeys("ctrl+enter", () => addOrder(), {
     enableOnTags: ["SELECT", "INPUT", "TEXTAREA"],
   });
 
